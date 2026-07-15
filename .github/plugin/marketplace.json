@@ -42,6 +42,11 @@
       "name": "azure-managed-grafana",
       "description": "Azure Managed Grafana integration for Azure SRE Agent, providing access to dashboards, Azure Monitor metrics, Application Insights, Azure Data Explorer, SQL Server, and Resource Graph queries via the built-in AMG-MCP endpoint.",
       "source": "./plugins/azure-managed-grafana"
+    },
+    {
+      "name": "inspektor-gadget",
+      "description": "Inspektor Gadget integration for Azure SRE Agent, providing deep Kubernetes troubleshooting powered by eBPF (syscalls, DNS, TCP, files, exec, signals, OOM, and capabilities) run via kubectl debug on the node.",
+      "source": "./plugins/inspektor-gadget"
     }
   ]
 }

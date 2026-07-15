@@ -1,0 +1,6 @@
+{
+  "name": "inspektor-gadget",
+  "description": "Inspektor Gadget integration for Azure SRE Agent, providing deep Kubernetes troubleshooting powered by eBPF (syscalls, DNS, TCP, files, exec, signals, OOM, and capabilities) run via kubectl debug on the node.",
+  "license": "MIT",
+  "skills": ["skills/"]
+}
