@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ig.sh — run Inspektor Gadget on a Kubernetes node via `kubectl debug`.
-# Ships with the deep-k8s-troubleshooting skill; only `kubectl` is required.
+# Ships with the inspektor_gadget_observability skill; only `kubectl` is required.
 #
 # Usage:
 #   ig.sh --pod  <pod> <namespace> <ig-args...>   # auto-resolve the pod's node

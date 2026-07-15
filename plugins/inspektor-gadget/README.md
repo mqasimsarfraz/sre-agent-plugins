@@ -12,7 +12,7 @@ packets, DNS, TCP, files, exec, signals, OOM and capability events.
 
 ## What it provides
 
-The `deep-k8s-troubleshooting` skill teaches the agent to:
+The `inspektor_gadget_observability` skill teaches the agent to:
 
 - Pick the right gadget for a symptom (DNS failures, connection refused,
   CrashLoopBackOff, OOMKilled, missing files, permission denied, high CPU, slow
@@ -27,7 +27,7 @@ The `deep-k8s-troubleshooting` skill teaches the agent to:
 ### Layout
 
 ```
-skills/deep-k8s-troubleshooting/
+skills/inspektor_gadget_observability/
 ├── SKILL.md               # Rules, base command, workflow, discovery
 ├── references/gadgets.md  # Gadget catalog, symptom map, per-type run behavior
 └── scripts/ig.sh          # Bundled kubectl-debug wrapper (only kubectl needed)

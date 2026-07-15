@@ -1,5 +1,5 @@
 ---
-name: deep-k8s-troubleshooting
+name: inspektor_gadget_observability
 description: >-
   Deep Kubernetes troubleshooting powered by eBPF using Inspektor Gadget, run
   via `kubectl debug` node (only `kubectl` required — no local `ig` binary or
