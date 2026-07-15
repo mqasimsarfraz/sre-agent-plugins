@@ -1,53 +1,65 @@
 # Inspektor Gadget Plugin
 
-Deep Kubernetes troubleshooting powered by **eBPF** for the Azure SRE Agent,
-using the CNCF [Inspektor Gadget](https://inspektor-gadget.io) project.
+Read kernel-level Kubernetes observability data from **Inspektor Gadget (IG)**
+for the Azure SRE Agent, using the CNCF [Inspektor Gadget](https://inspektor-gadget.io)
+project.
 
-This is a **skills-only plugin** — it requires no MCP server. Everything runs
-through `kubectl debug` on the node, so only `kubectl` access to the cluster is
-needed (no local `ig` binary or `kubectl gadget` plugin).
+This is a **skills-only plugin** — it requires no MCP server. It is also
+**read-only** and works entirely through `kubectl get` and `kubectl logs`, so it
+runs on locked-down kubectl surfaces (like the Azure SRE Agent) with **no**
+`kubectl debug`, `exec`, `attach`, `port-forward`, `krew`, local `ig` binary,
+`kubectl gadget` plugin — and **no `jq`**.
 
-Use it when logs and metrics can't explain what the kernel is doing: syscalls,
-packets, DNS, TCP, files, exec, signals, OOM and capability events.
+Use it to read what already-running gadgets are seeing from the kernel: DNS, TCP,
+exec, files, signals, OOM, syscalls and more.
 
-## What it provides
+## How it works
 
-The `deep-k8s-troubleshooting` skill teaches the agent to:
+When IG is deployed with the **logs operator enabled**
+(`config.operator.logs.enabled: true` — the default in recent charts), every
+**headless** gadget instance continuously writes its events as JSON lines to the
+gadget pods' stderr. So the data is retrievable with plain `kubectl logs`.
 
-- Pick the right gadget for a symptom (DNS failures, connection refused,
-  CrashLoopBackOff, OOMKilled, missing files, permission denied, high CPU, slow
-  disk I/O, packet capture, and more).
-- Discover a gadget's params and fields with `ig run <gadget> --help` before
-  building any `--filter`/`--fields` expression — it never guesses.
-- Bound every run with the correct `--timeout`/`--interval` flags per gadget
-  type (snapshot/top/trace/profile/tcpdump) to keep runs cheap and clean.
-- Scope with in-kernel filters first, then user-space `--filter` expressions
-  (preferring numeric `*_raw` fields).
+The `inspektor_gadget_logs` skill teaches the agent to:
+
+- Confirm the logs operator is enabled (`kubectl get cm gadget`).
+- List running headless gadget instances from their `type=gadget-instance`
+  ConfigMaps — the ConfigMap name is the instance's `instanceID`.
+- Inspect an instance's scope (traced namespace / pod / selector / fields).
+- Read and filter its events by `instanceID` / gadget / datasource using only
+  `kubectl logs` + `grep` (no `jq`).
 
 ### Layout
 
 ```
-skills/deep-k8s-troubleshooting/
-├── SKILL.md               # Rules, base command, workflow, discovery
-├── references/gadgets.md  # Gadget catalog, symptom map, per-type run behavior
-└── scripts/ig.sh          # Bundled kubectl-debug wrapper (only kubectl needed)
+skills/inspektor_gadget_logs/
+├── SKILL.md                    # Rules, base command, workflow, manual commands
+├── references/logs-operator.md # Envelope schema, operator config, instance map, troubleshooting
+└── scripts/gadget-logs.sh      # kubectl get/logs wrapper (only kubectl + grep needed)
 ```
 
 ## Requirements
 
-- `kubectl` configured for the target cluster.
-- Permission to run `kubectl debug --profile=sysadmin node/<node>` (a privileged
-  debug pod). Gadgets themselves are read-only, but the debug pod is privileged —
-  run only with approval and appropriate RBAC, and clean up debug pods after.
+- `kubectl` configured for the target cluster (read access to the `gadget`
+  namespace: `get configmap`, `get pods`, `logs`).
+- IG deployed with the logs operator enabled and at least one **headless**
+  gadget running (started out-of-band via `kubectl gadget run <gadget> --detach`
+  or the gadget CRD). This plugin does **not** start gadgets — it only reads them.
 
 ## Quick start
 
 ```bash
-# Auto-resolves the pod's node and pins the IG version.
-scripts/ig.sh --pod <pod> <ns> run trace_dns --filter 'rcode_raw!=0' --timeout 30
+# Is the logs operator enabled?
+scripts/gadget-logs.sh check
+
+# What headless gadgets are running? (INSTANCE_ID == ConfigMap name)
+scripts/gadget-logs.sh list
+
+# Inspect one instance's scope, then read its events (raw JSON; grep to narrow).
+scripts/gadget-logs.sh show <instanceID>
+scripts/gadget-logs.sh logs --instance <instanceID> --since 5m
 ```
 
-Override the version/image via the `IG_VERSION` / `IG_IMAGE` environment
-variables.
+Override the IG namespace with the `GADGET_NAMESPACE` env var (default `gadget`).
 
 MIT licensed.
